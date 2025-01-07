@@ -1,5 +1,5 @@
 import type { ColumnSort, Row } from "@tanstack/react-table"
-import { type SQL } from "drizzle-orm"
+import type { Prisma } from "@prisma/client"
 import { type z } from "zod"
 
 import { type DataTableConfig } from "@/config/data-table"
@@ -58,8 +58,8 @@ export interface DataTableRowAction<TData> {
 }
 
 export interface QueryBuilderOpts {
-  where?: SQL
-  orderBy?: SQL
+  where?: Prisma.TaskWhereInput
+  orderBy?: Prisma.TaskOrderByWithRelationInput[]
   distinct?: boolean
   nullish?: boolean
 }

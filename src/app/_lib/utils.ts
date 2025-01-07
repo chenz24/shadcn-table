@@ -1,4 +1,4 @@
-import { tasks, type Task } from "@/db/schema"
+import type { Task } from "@prisma/client"
 import { faker } from "@faker-js/faker"
 import {
   ArrowDownIcon,
@@ -21,9 +21,9 @@ export function generateRandomTask(): Task {
     title: faker.hacker
       .phrase()
       .replace(/^./, (letter) => letter.toUpperCase()),
-    status: faker.helpers.shuffle(tasks.status.enumValues)[0] ?? "todo",
-    label: faker.helpers.shuffle(tasks.label.enumValues)[0] ?? "bug",
-    priority: faker.helpers.shuffle(tasks.priority.enumValues)[0] ?? "low",
+    status: faker.helpers.arrayElement(["todo", "in_progress", "done", "canceled"]),
+    label: faker.helpers.arrayElement(["bug", "feature", "enhancement", "documentation"]),
+    priority: faker.helpers.arrayElement(["low", "medium", "high"]),
     archived: faker.datatype.boolean({ probability: 0.2 }),
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -39,7 +39,7 @@ export function getStatusIcon(status: Task["status"]) {
   const statusIcons = {
     canceled: CircleX,
     done: CheckCircle2,
-    "in-progress": Timer,
+    in_progress: Timer,
     todo: CircleHelp,
   }
 
@@ -54,9 +54,9 @@ export function getStatusIcon(status: Task["status"]) {
 export function getPriorityIcon(priority: Task["priority"]) {
   const priorityIcons = {
     high: ArrowUpIcon,
-    low: ArrowDownIcon,
     medium: ArrowRightIcon,
+    low: ArrowDownIcon,
   }
 
-  return priorityIcons[priority] || CircleIcon
+  return priorityIcons[priority] || ArrowRightIcon
 }

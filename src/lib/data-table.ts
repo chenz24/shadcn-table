@@ -55,20 +55,21 @@ export function getCommonPinningStyles<TData>({
  * Determine the default filter operator for a given column type.
  *
  * This function returns the most appropriate default filter operator based on the
- * column's data type. For text columns, it returns 'iLike' (case-insensitive like),
- * while for all other types, it returns 'eq' (equality).
+ * column's data type. For text columns, it returns 'contains' (case-insensitive like),
+ * while for all other types, it returns 'equals' (equality).
  *
  * @param columnType - The type of the column (e.g., 'text', 'number', 'date', etc.).
  * @returns The default FilterOperator for the given column type.
  */
-export function getDefaultFilterOperator(
-  columnType: ColumnType
-): FilterOperator {
-  if (columnType === "text") {
-    return "iLike"
+export function getDefaultFilterOperator(columnType: ColumnType): FilterOperator {
+  switch (columnType) {
+    case "text":
+      return "contains"
+    case "date":
+      return "is-today"
+    default:
+      return "equals"
   }
-
-  return "eq"
 }
 
 /**
@@ -82,19 +83,11 @@ export function getDefaultFilterOperator(
  * @returns An array of objects, each containing a label and value for a filter operator.
  */
 export function getFilterOperators(columnType: ColumnType) {
-  const operatorMap: Record<
-    ColumnType,
-    { label: string; value: FilterOperator }[]
-  > = {
-    text: dataTableConfig.textOperators,
-    number: dataTableConfig.numericOperators,
-    select: dataTableConfig.selectOperators,
-    "multi-select": dataTableConfig.selectOperators,
-    boolean: dataTableConfig.booleanOperators,
-    date: dataTableConfig.dateOperators,
-  }
-
-  return operatorMap[columnType] ?? dataTableConfig.textOperators
+  const operators = dataTableConfig.operators[columnType] ?? []
+  return operators.map((operator) => ({
+    label: operator.label,
+    value: operator.value,
+  }))
 }
 
 /**
@@ -102,24 +95,23 @@ export function getFilterOperators(columnType: ColumnType) {
  *
  * This function processes an array of filters and returns a new array
  * containing only the valid filters. A filter is considered valid if:
- * - It has an 'isEmpty' or 'isNotEmpty' operator, or
+ * - It has an 'is-empty' or 'is-not-empty' operator, or
  * - Its value is not empty (for array values, at least one element must be present;
  *   for other types, the value must not be an empty string, null, or undefined)
  *
  * @param filters - An array of Filter objects to be validated.
  * @returns A new array containing only the valid filters.
  */
-export function getValidFilters<TData>(
-  filters: Filter<TData>[]
-): Filter<TData>[] {
-  return filters.filter(
-    (filter) =>
-      filter.operator === "isEmpty" ||
-      filter.operator === "isNotEmpty" ||
-      (Array.isArray(filter.value)
-        ? filter.value.length > 0
-        : filter.value !== "" &&
-          filter.value !== null &&
-          filter.value !== undefined)
-  )
+export function getValidFilters<TData>(filters: Filter<TData>[]): Filter<TData>[] {
+  return filters.filter((filter) => {
+    if (filter.operator === "is-empty" || filter.operator === "is-not-empty") {
+      return true
+    }
+
+    if (Array.isArray(filter.value)) {
+      return filter.value.length > 0
+    }
+
+    return filter.value !== "" && filter.value !== null && filter.value !== undefined
+  })
 }

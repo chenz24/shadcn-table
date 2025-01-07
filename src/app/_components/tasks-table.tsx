@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { tasks, type Task } from "@/db/schema"
+import type { Task } from "@prisma/client"
 import type {
   DataTableAdvancedFilterField,
   DataTableFilterField,
@@ -71,7 +71,7 @@ export function TasksTable({ promises }: TasksTableProps) {
     {
       id: "status",
       label: "Status",
-      options: tasks.status.enumValues.map((status) => ({
+      options: ["todo", "in_progress", "done"].map((status) => ({
         label: toSentenceCase(status),
         value: status,
         icon: getStatusIcon(status),
@@ -81,7 +81,7 @@ export function TasksTable({ promises }: TasksTableProps) {
     {
       id: "priority",
       label: "Priority",
-      options: tasks.priority.enumValues.map((priority) => ({
+      options: ["low", "medium", "high"].map((priority) => ({
         label: toSentenceCase(priority),
         value: priority,
         icon: getPriorityIcon(priority),
@@ -110,7 +110,7 @@ export function TasksTable({ promises }: TasksTableProps) {
       id: "status",
       label: "Status",
       type: "multi-select",
-      options: tasks.status.enumValues.map((status) => ({
+      options: ["todo", "in_progress", "done"].map((status) => ({
         label: toSentenceCase(status),
         value: status,
         icon: getStatusIcon(status),
@@ -121,7 +121,7 @@ export function TasksTable({ promises }: TasksTableProps) {
       id: "priority",
       label: "Priority",
       type: "multi-select",
-      options: tasks.priority.enumValues.map((priority) => ({
+      options: ["low", "medium", "high"].map((priority) => ({
         label: toSentenceCase(priority),
         value: priority,
         icon: getPriorityIcon(priority),
