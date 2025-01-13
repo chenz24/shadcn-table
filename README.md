@@ -15,8 +15,8 @@ This is a shadcn table with server-side sorting, filtering, and pagination. It i
 - **Styling:** [Tailwind CSS](https://tailwindcss.com)
 - **UI Components:** [shadcn/ui](https://ui.shadcn.com)
 - **Table package:** [TanStack/react-table](https://tanstack.com/table/latest)
-- **Database:** [Neon](https://neon.tech)
-- **ORM:** [Drizzle ORM](https://orm.drizzle.team)
+- **Database:** [Supabase](https://supabase.com)
+- **ORM:** [Prisma](https://www.prisma.io)
 - **Validation:** [Zod](https://zod.dev)
 
 ## Features

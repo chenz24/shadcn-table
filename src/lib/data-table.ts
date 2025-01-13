@@ -104,7 +104,7 @@ export function getFilterOperators(columnType: ColumnType) {
  */
 export function getValidFilters<TData>(filters: Filter<TData>[]): Filter<TData>[] {
   return filters.filter((filter) => {
-    if (filter.operator === "is-empty" || filter.operator === "is-not-empty") {
+    if (filter.operator === "is-empty" || filter.operator === "is-not-empty" || filter.operator === "is-today" || filter.operator === "is-tomorrow" || filter.operator === "is-next-7-days") {
       return true
     }
 

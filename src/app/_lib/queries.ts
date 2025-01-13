@@ -21,7 +21,7 @@ export async function getTasks(input: GetTasksSchema) {
 
         const where = advancedTable
           ? filterColumns({
-              table: "Task",
+              // table: "Task",
               filters: input.filters,
               joinOperator: input.joinOperator,
             })

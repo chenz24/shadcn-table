@@ -106,7 +106,7 @@ export const dataTableConfig = {
     { label: "Or", value: "or" as const },
   ],
   sortOrders: [
-    { label: "升序", value: "asc" as const },
-    { label: "降序", value: "desc" as const },
+    { label: "Asc", value: "asc" as const },
+    { label: "Desc", value: "desc" as const },
   ],
 } as const

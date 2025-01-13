@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment,@typescript-eslint/ban-ts-comment */
 "use client"
 
 import * as React from "react"
-import type { Task } from "@prisma/client"
+import { Task } from "@prisma/client"
 import type {
   DataTableAdvancedFilterField,
   DataTableFilterField,
@@ -22,7 +23,7 @@ import type {
 import { getPriorityIcon, getStatusIcon } from "../_lib/utils"
 import { DeleteTasksDialog } from "./delete-tasks-dialog"
 import { useFeatureFlags } from "./feature-flags-provider"
-import { getColumns } from "./tasks-table-columns"
+import { getColumns, statuses, priorities } from "./tasks-table-columns"
 import { TasksTableFloatingBar } from "./tasks-table-floating-bar"
 import { TasksTableToolbarActions } from "./tasks-table-toolbar-actions"
 import { UpdateTaskSheet } from "./update-task-sheet"
@@ -71,20 +72,22 @@ export function TasksTable({ promises }: TasksTableProps) {
     {
       id: "status",
       label: "Status",
-      options: ["todo", "in_progress", "done"].map((status) => ({
+      options: statuses.map((status) => ({
         label: toSentenceCase(status),
         value: status,
         icon: getStatusIcon(status),
+        // @ts-expect-error
         count: statusCounts[status],
       })),
     },
     {
       id: "priority",
       label: "Priority",
-      options: ["low", "medium", "high"].map((priority) => ({
+      options: priorities.map((priority) => ({
         label: toSentenceCase(priority),
         value: priority,
         icon: getPriorityIcon(priority),
+        // @ts-expect-error
         count: priorityCounts[priority],
       })),
     },
@@ -110,10 +113,11 @@ export function TasksTable({ promises }: TasksTableProps) {
       id: "status",
       label: "Status",
       type: "multi-select",
-      options: ["todo", "in_progress", "done"].map((status) => ({
+      options: statuses.map((status) => ({
         label: toSentenceCase(status),
         value: status,
         icon: getStatusIcon(status),
+        // @ts-expect-error
         count: statusCounts[status],
       })),
     },
@@ -121,10 +125,11 @@ export function TasksTable({ promises }: TasksTableProps) {
       id: "priority",
       label: "Priority",
       type: "multi-select",
-      options: ["low", "medium", "high"].map((priority) => ({
+      options: priorities.map((priority) => ({
         label: toSentenceCase(priority),
         value: priority,
         icon: getPriorityIcon(priority),
+        // @ts-expect-error
         count: priorityCounts[priority],
       })),
     },

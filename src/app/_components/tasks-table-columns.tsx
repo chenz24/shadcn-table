@@ -36,6 +36,9 @@ interface GetColumnsProps {
   >
 }
 
+export const statuses: Task["status"][] = ["todo", "in_progress", "done"];
+export const priorities: Task["priority"][] = ["low", "medium", "high"];
+
 export function getColumns({
   setRowAction,
 }: GetColumnsProps): ColumnDef<Task>[] {
@@ -63,10 +66,31 @@ export function getColumns({
       enableHiding: false,
     },
     {
+      accessorKey: "code",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Task" />
+      ),
+      cell: ({ row }) => <div className="w-20">{row.getValue("code")}</div>,
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
       accessorKey: "title",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Title" />
       ),
+      cell: ({ row }) => {
+        const label = row.original.label;
+
+        return (
+          <div className="flex space-x-2">
+            {label && <Badge variant="outline">{label}</Badge>}
+            <span className="max-w-[31.25rem] truncate font-medium">
+              {row.getValue("title")}
+            </span>
+          </div>
+        )
+      },
     },
     {
       accessorKey: "status",
@@ -74,12 +98,12 @@ export function getColumns({
         <DataTableColumnHeader column={column} title="Status" />
       ),
       cell: ({ row }) => {
-        const status = row.getValue("status") as Task["status"]
+        const status = row.getValue<Task['status']>("status")
         const Icon = getStatusIcon(status)
 
         return (
           <div className="flex items-center gap-2">
-            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <Icon className="size-4 shrink-0" aria-hidden="true" />
             <span className="capitalize">{status.replace("_", " ")}</span>
           </div>
         )
@@ -94,12 +118,12 @@ export function getColumns({
         <DataTableColumnHeader column={column} title="Priority" />
       ),
       cell: ({ row }) => {
-        const priority = row.getValue("priority") as Task["priority"]
+        const priority = row.getValue<Task["priority"]>("priority")
         const Icon = getPriorityIcon(priority)
 
         return (
           <div className="flex items-center gap-2">
-            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <Icon className="size-4 shrink-0" aria-hidden="true" />
             <span className="capitalize">{priority}</span>
           </div>
         )
@@ -109,22 +133,20 @@ export function getColumns({
       },
     },
     {
-      accessorKey: "label",
+      accessorKey: "archived",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Label" />
+        <DataTableColumnHeader column={column} title="Archived" />
       ),
-      cell: ({ row }) => {
-        const label = row.getValue("label") as Task["label"]
-
-        return (
-          <Badge variant="outline" className="capitalize">
-            {label}
-          </Badge>
-        )
-      },
-      filterFn: (row, id, value: string[]) => {
-        return value.includes(row.getValue(id))
-      },
+      cell: ({ row }) => (
+        <Badge variant="outline">{row.original.archived ? "Yes" : "No"}</Badge>
+      ),
+    },
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Created At" />
+      ),
+      cell: ({ cell }) => formatDate(cell.getValue() as Date),
     },
     {
       id: "actions",
@@ -133,9 +155,9 @@ export function getColumns({
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
+              className="flex size-8 p-0 data-[state=open]:bg-muted"
             >
-              <Ellipsis className="h-4 w-4" />
+              <Ellipsis className="size-4" />
               <span className="sr-only">Open menu</span>
             </Button>
           </DropdownMenuTrigger>
@@ -154,7 +176,7 @@ export function getColumns({
               <DropdownMenuSubTrigger>Status</DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 <DropdownMenuRadioGroup value={row.original.status}>
-                  {["todo", "in_progress", "done"].map((status) => {
+                  {statuses.map((status) => {
                     const Icon = getStatusIcon(status)
 
                     return (
@@ -174,7 +196,7 @@ export function getColumns({
                           }
                         }}
                       >
-                        <Icon className="h-4 w-4" aria-hidden="true" />
+                        <Icon className="size-4" aria-hidden="true" />
                         <span className="capitalize">{status.replace("_", " ")}</span>
                       </DropdownMenuRadioItem>
                     )
@@ -186,7 +208,7 @@ export function getColumns({
               <DropdownMenuSubTrigger>Priority</DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 <DropdownMenuRadioGroup value={row.original.priority}>
-                  {["low", "medium", "high"].map((priority) => {
+                  {priorities.map((priority) => {
                     const Icon = getPriorityIcon(priority)
 
                     return (
@@ -206,7 +228,7 @@ export function getColumns({
                           }
                         }}
                       >
-                        <Icon className="h-4 w-4" aria-hidden="true" />
+                        <Icon className="size-4" aria-hidden="true" />
                         <span className="capitalize">{priority}</span>
                       </DropdownMenuRadioItem>
                     )

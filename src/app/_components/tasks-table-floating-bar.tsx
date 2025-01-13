@@ -180,6 +180,8 @@ export function TasksTableFloatingBar({ table }: TasksTableFloatingBarProps) {
                   setAction("export")
                   startTransition(() => {
                     try {
+                      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                      // @ts-expect-error
                       exportTableToCSV(rows, "tasks.csv")
                       toast.success("Tasks exported")
                     } catch (error) {

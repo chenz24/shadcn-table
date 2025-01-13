@@ -1,4 +1,4 @@
-import { isRedirectError } from "next/dist/client/components/redirect"
+import { getRedirectError } from "next/dist/client/components/redirect"
 import { toast } from "sonner"
 import { z } from "zod"
 
@@ -12,7 +12,7 @@ export function getErrorMessage(err: unknown) {
     return errors.join("\n")
   } else if (err instanceof Error) {
     return err.message
-  } else if (isRedirectError(err)) {
+  } else if (getRedirectError(err, null, false)) {
     throw err
   } else {
     return unknownError

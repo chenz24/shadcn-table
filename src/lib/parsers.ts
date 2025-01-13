@@ -47,32 +47,40 @@ export const getSortingStateParser = <TData>(
   })
 }
 
-export const filterSchema = z.discriminatedUnion("type", [
-  z.object({
-    id: z.string(),
-    type: z.literal("text"),
-    operator: z.enum(dataTableConfig.globalOperators),
-    value: z.string().or(z.array(z.string())),
-  }),
-  z.object({
-    id: z.string(),
-    type: z.literal("number"),
-    operator: z.enum(dataTableConfig.globalOperators),
-    value: z.number().or(z.array(z.number())),
-  }),
-  z.object({
-    id: z.string(),
-    type: z.literal("date"),
-    operator: z.enum(dataTableConfig.globalOperators),
-    value: z.string().datetime().or(z.array(z.string().datetime())),
-  }),
-  z.object({
-    id: z.string(),
-    type: z.literal("select"),
-    operator: z.enum(dataTableConfig.globalOperators),
-    value: z.string().or(z.array(z.string())),
-  }),
-])
+// export const filterSchema = z.discriminatedUnion("type", [
+//   z.object({
+//     id: z.string(),
+//     type: z.literal("text"),
+//     operator: z.enum(dataTableConfig.globalOperators),
+//     value: z.string().or(z.array(z.string())),
+//   }),
+//   z.object({
+//     id: z.string(),
+//     type: z.literal("number"),
+//     operator: z.enum(dataTableConfig.globalOperators),
+//     value: z.number().or(z.array(z.number())),
+//   }),
+//   z.object({
+//     id: z.string(),
+//     type: z.literal("date"),
+//     operator: z.enum(dataTableConfig.globalOperators),
+//     value: z.string().datetime().or(z.array(z.string().datetime())),
+//   }),
+//   z.object({
+//     id: z.string(),
+//     type: z.literal("select"),
+//     operator: z.enum(dataTableConfig.globalOperators),
+//     value: z.string().or(z.array(z.string())),
+//   }),
+// ])
+
+export const filterSchema = z.object({
+  id: z.string(),
+  value: z.union([z.string(), z.array(z.string())]),
+  type: z.enum(dataTableConfig.columnTypes),
+  operator: z.enum(dataTableConfig.globalOperators),
+  rowId: z.string(),
+})
 
 /**
  * Creates a parser for data table filters.

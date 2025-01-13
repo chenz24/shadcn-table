@@ -1,6 +1,6 @@
 import type { Filter, JoinOperator } from "@/types"
 import { addDays, endOfDay, startOfDay } from "date-fns"
-import { Prisma } from "@prisma/client"
+import { type Prisma } from "@prisma/client"
 
 type WhereInput = Prisma.TaskWhereInput
 
@@ -15,72 +15,95 @@ type WhereInput = Prisma.TaskWhereInput
  * comparison for numbers and dates, etc.) and the function will generate the appropriate
  * Prisma conditions based on the filter's type and value.
  *
- * @param table - The table name to apply the filters on.
  * @param filters - An array of filters to be applied.
  * @param joinOperator - The join operator to use for combining the filters.
  * @returns A Prisma where condition representing the combined filters.
  */
 export function filterColumns({
-  table,
   filters,
   joinOperator,
 }: {
-  table: string
-  filters: Filter<Prisma.Task>[]
+  filters: Filter<any>[]
   joinOperator: JoinOperator
 }): WhereInput {
-  const conditions = filters.map((filter): WhereInput => {
-    const { id, value, operator } = filter
-
+  const conditions = filters.map((filter): WhereInput | undefined => {
+    const { id, value, operator, type } = filter
     switch (operator) {
       case "equals":
-        // 如果是数组，使用 in 操作符
         if (Array.isArray(value)) {
           return { [id]: { in: value } }
+        } else if (type === 'boolean' && typeof value === 'string' ) {
+          return { [id]: filter.value === "true" };
+        } else if (type === 'date') {
+          const date = new Date(value);
+          const start = startOfDay(date);
+          const end = endOfDay(date);
+          return { [id]: { gte: start, lte: end } };
         }
         return { [id]: { equals: value } }
       case "not-equals":
-        // 如果是数组，使用 notIn 操作符
         if (Array.isArray(value)) {
           return { [id]: { notIn: value } }
+        } else if (type === 'boolean') {
+          return { [id]: { not: filter.value === "true" } };
+        } else if (filter.type === "date") {
+          const date = new Date(value);
+          const start = startOfDay(date);
+          const end = endOfDay(date);
+          return { OR: [{ [id]: { lt: start } }, { [id]: { gt: end } }] };
         }
         return { [id]: { not: value } }
       case "contains":
         return { [id]: { contains: value, mode: "insensitive" } }
       case "not-contains":
-        return { [id]: { not: { contains: value, mode: "insensitive" } } }
+        return { [id]: { not: { contains: value } } }
       case "greater-than":
+        if (type === "date" && typeof value === "string") {
+          return { [id]: { gt: startOfDay(new Date(value)) } }
+        }
         return { [id]: { gt: value } }
       case "greater-than-or-equals":
-        return { [id]: { gte: value } }
+        return filter.type === "number"
+          ? { [id]: { gte: filter.value } }
+          : filter.type === "date" && typeof filter.value === "string"
+            ? { [id]: { gte: startOfDay(new Date(filter.value)) } }
+            : undefined;
       case "less-than":
-        return { [id]: { lt: value } }
+        return filter.type === "number"
+          ? { [id]: { lt: filter.value } }
+          : filter.type === "date" && typeof filter.value === "string"
+            ? { [id]: { lt: endOfDay(new Date(filter.value)) } }
+            : undefined;
       case "less-than-or-equals":
-        return { [id]: { lte: value } }
+        return filter.type === "number"
+          ? { [id]: { lte: filter.value } }
+          : filter.type === "date" && typeof filter.value === "string"
+            ? { [id]: { lte: endOfDay(new Date(filter.value)) } }
+            : undefined;
       case "in":
         return { [id]: { in: value } }
       case "not-in":
         return { [id]: { notIn: value } }
       case "between": {
-        const [start, end] = value as [string, string]
-        if (id === "createdAt") {
-          return {
-            AND: [
-              { [id]: { gte: startOfDay(new Date(start)) } },
-              { [id]: { lte: endOfDay(new Date(end)) } },
-            ],
-          }
+        if (Array.isArray(filter.value) && filter.value.length === 2) {
+          return filter.type === "date" ? {
+              AND: [
+                filter.value[0] ? { [id]: { gte: startOfDay(new Date(filter.value[0])) } } : undefined,
+                filter.value[1] ? { [id]: { lte: endOfDay(new Date(filter.value[1])) } } : undefined,
+              ].filter(Boolean),
+            }
+            : {
+              AND: [
+                { [id]: { gte: filter.value[0] } },
+                { [id]: { lte: filter.value[1] } },
+              ],
+            };
         }
-        return {
-          AND: [
-            { [id]: { gte: start } },
-            { [id]: { lte: end } },
-          ],
-        }
+        return undefined;
       }
       case "not-between": {
         const [start, end] = value as [string, string]
-        if (id === "createdAt") {
+        if (type === "date") {
           return {
             OR: [
               { [id]: { lt: startOfDay(new Date(start)) } },
@@ -130,11 +153,15 @@ export function filterColumns({
     }
   })
 
-  if (conditions.length === 0) {
+  const validConditions = conditions.filter((condition) => condition !== undefined);
+
+  if (validConditions.length === 0) {
     return {}
   }
 
+  console.log('validConditions', validConditions)
+
   return {
-    [joinOperator === "and" ? "AND" : "OR"]: conditions,
+    [joinOperator === "and" ? "AND" : "OR"]: validConditions,
   }
 }
