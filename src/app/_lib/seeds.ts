@@ -1,5 +1,5 @@
-import { db } from "@/db/index"
-import { tasks, type Task } from "@/db/schema"
+import { prisma } from "@/lib/prisma"
+import type { Task } from "@prisma/client"
 
 import { generateRandomTask } from "./utils"
 
@@ -13,12 +13,16 @@ export async function seedTasks(input: { count: number }) {
       allTasks.push(generateRandomTask())
     }
 
-    await db.delete(tasks)
+    await prisma.task.deleteMany()
 
     console.log("📝 Inserting tasks", allTasks.length)
 
-    await db.insert(tasks).values(allTasks).onConflictDoNothing()
+    await prisma.task.createMany({
+      data: allTasks,
+      skipDuplicates: true,
+    })
   } catch (err) {
-    console.error(err)
+    console.error("Error seeding tasks:", err)
+    throw err
   }
 }

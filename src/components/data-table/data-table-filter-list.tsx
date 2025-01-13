@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use client"
 
 import * as React from "react"
@@ -166,13 +167,13 @@ export function DataTableFilterList<TData>({
 
     if (!filterField) return null
 
-    if (filter.operator === "isEmpty" || filter.operator === "isNotEmpty") {
+    if (filter.operator === "is-empty" || filter.operator === "is-not-empty" || filter.operator === "is-today" || filter.operator === "is-tomorrow" || filter.operator === "is-next-7-days") {
       return (
         <div
           id={inputId}
           role="status"
           aria-live="polite"
-          aria-label={`${filterField.label} filter is ${filter.operator === "isEmpty" ? "empty" : "not empty"}`}
+          aria-label={`${filterField.label} filter is ${filter.operator === "is-empty" ? "empty" : "not empty"}`}
           className="h-8 w-full rounded border border-dashed"
         />
       )
@@ -384,7 +385,7 @@ export function DataTableFilterList<TData>({
           : [filter.value, filter.value].filter(Boolean)
 
         const displayValue =
-          filter.operator === "isBetween" && dateValue.length === 2
+          filter.operator === "between" && dateValue.length === 2
             ? `${formatDate(dateValue[0] ?? new Date())} - ${formatDate(
                 dateValue[1] ?? new Date()
               )}`
@@ -418,7 +419,7 @@ export function DataTableFilterList<TData>({
               align="start"
               className="w-auto p-0"
             >
-              {filter.operator === "isBetween" ? (
+              {filter.operator === "between" ? (
                 <Calendar
                   id={`${inputId}-calendar`}
                   mode="range"
@@ -696,7 +697,7 @@ export function DataTableFilterList<TData>({
                           field: {
                             operator: value,
                             value:
-                              value === "isEmpty" || value === "isNotEmpty"
+                              value === "is-empty" || value === "is-not-empty"
                                 ? ""
                                 : filter.value,
                           },

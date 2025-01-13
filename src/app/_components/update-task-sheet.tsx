@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { tasks, type Task } from "@/db/schema"
+import { type Task } from "@/db/schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader } from "lucide-react"
 import { useForm } from "react-hook-form"
@@ -124,7 +124,7 @@ export function UpdateTaskSheet({ task, ...props }: UpdateTaskSheetProps) {
                     </FormControl>
                     <SelectContent>
                       <SelectGroup>
-                        {tasks.label.enumValues.map((item) => (
+                        {["label1", "label2", "label3"].map((item) => (
                           <SelectItem
                             key={item}
                             value={item}
@@ -157,7 +157,7 @@ export function UpdateTaskSheet({ task, ...props }: UpdateTaskSheetProps) {
                     </FormControl>
                     <SelectContent>
                       <SelectGroup>
-                        {tasks.status.enumValues.map((item) => (
+                        {["status1", "status2", "status3"].map((item) => (
                           <SelectItem
                             key={item}
                             value={item}
@@ -190,15 +190,17 @@ export function UpdateTaskSheet({ task, ...props }: UpdateTaskSheetProps) {
                     </FormControl>
                     <SelectContent>
                       <SelectGroup>
-                        {tasks.priority.enumValues.map((item) => (
-                          <SelectItem
-                            key={item}
-                            value={item}
-                            className="capitalize"
-                          >
-                            {item}
-                          </SelectItem>
-                        ))}
+                        {["priority1", "priority2", "priority3"].map(
+                          (item) => (
+                            <SelectItem
+                              key={item}
+                              value={item}
+                              className="capitalize"
+                            >
+                              {item}
+                            </SelectItem>
+                          )
+                        )}
                       </SelectGroup>
                     </SelectContent>
                   </Select>

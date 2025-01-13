@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { tasks, type Task } from "@/db/schema"
+import type { Task } from "@prisma/client"
 import { type DataTableRowAction } from "@/types"
 import { type ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
@@ -36,6 +36,9 @@ interface GetColumnsProps {
   >
 }
 
+export const statuses: Task["status"][] = ["todo", "in_progress", "done"];
+export const priorities: Task["priority"][] = ["low", "medium", "high"];
+
 export function getColumns({
   setRowAction,
 }: GetColumnsProps): ColumnDef<Task>[] {
@@ -50,7 +53,6 @@ export function getColumns({
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
-          className="translate-y-0.5"
         />
       ),
       cell: ({ row }) => (
@@ -58,7 +60,6 @@ export function getColumns({
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
           aria-label="Select row"
-          className="translate-y-0.5"
         />
       ),
       enableSorting: false,
@@ -79,9 +80,7 @@ export function getColumns({
         <DataTableColumnHeader column={column} title="Title" />
       ),
       cell: ({ row }) => {
-        const label = tasks.label.enumValues.find(
-          (label) => label === row.original.label
-        )
+        const label = row.original.label;
 
         return (
           <div className="flex space-x-2">
@@ -99,26 +98,18 @@ export function getColumns({
         <DataTableColumnHeader column={column} title="Status" />
       ),
       cell: ({ row }) => {
-        const status = tasks.status.enumValues.find(
-          (status) => status === row.original.status
-        )
-
-        if (!status) return null
-
+        const status = row.getValue<Task['status']>("status")
         const Icon = getStatusIcon(status)
 
         return (
-          <div className="flex w-[6.25rem] items-center">
-            <Icon
-              className="mr-2 size-4 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <span className="capitalize">{status}</span>
+          <div className="flex items-center gap-2">
+            <Icon className="size-4 shrink-0" aria-hidden="true" />
+            <span className="capitalize">{status.replace("_", " ")}</span>
           </div>
         )
       },
-      filterFn: (row, id, value) => {
-        return Array.isArray(value) && value.includes(row.getValue(id))
+      filterFn: (row, id, value: string[]) => {
+        return value.includes(row.getValue(id))
       },
     },
     {
@@ -127,26 +118,18 @@ export function getColumns({
         <DataTableColumnHeader column={column} title="Priority" />
       ),
       cell: ({ row }) => {
-        const priority = tasks.priority.enumValues.find(
-          (priority) => priority === row.original.priority
-        )
-
-        if (!priority) return null
-
+        const priority = row.getValue<Task["priority"]>("priority")
         const Icon = getPriorityIcon(priority)
 
         return (
-          <div className="flex items-center">
-            <Icon
-              className="mr-2 size-4 text-muted-foreground"
-              aria-hidden="true"
-            />
+          <div className="flex items-center gap-2">
+            <Icon className="size-4 shrink-0" aria-hidden="true" />
             <span className="capitalize">{priority}</span>
           </div>
         )
       },
-      filterFn: (row, id, value) => {
-        return Array.isArray(value) && value.includes(row.getValue(id))
+      filterFn: (row, id, value: string[]) => {
+        return value.includes(row.getValue(id))
       },
     },
     {
@@ -167,72 +150,107 @@ export function getColumns({
     },
     {
       id: "actions",
-      cell: function Cell({ row }) {
-        const [isUpdatePending, startUpdateTransition] = React.useTransition()
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="flex size-8 p-0 data-[state=open]:bg-muted"
+            >
+              <Ellipsis className="size-4" />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[160px]">
+            <DropdownMenuItem
+              onClick={() => {
+                setRowAction({
+                  type: "update",
+                  row,
+                })
+              }}
+            >
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Status</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup value={row.original.status}>
+                  {statuses.map((status) => {
+                    const Icon = getStatusIcon(status)
 
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                aria-label="Open menu"
-                variant="ghost"
-                className="flex size-8 p-0 data-[state=open]:bg-muted"
-              >
-                <Ellipsis className="size-4" aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem
-                onSelect={() => setRowAction({ row, type: "update" })}
-              >
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  <DropdownMenuRadioGroup
-                    value={row.original.label}
-                    onValueChange={(value) => {
-                      startUpdateTransition(() => {
-                        toast.promise(
-                          updateTask({
-                            id: row.original.id,
-                            label: value as Task["label"],
-                          }),
-                          {
-                            loading: "Updating...",
-                            success: "Label updated",
-                            error: (err) => getErrorMessage(err),
-                          }
-                        )
-                      })
-                    }}
-                  >
-                    {tasks.label.enumValues.map((label) => (
+                    return (
                       <DropdownMenuRadioItem
-                        key={label}
-                        value={label}
-                        className="capitalize"
-                        disabled={isUpdatePending}
+                        key={status}
+                        value={status}
+                        className="flex items-center gap-2"
+                        onClick={async () => {
+                          try {
+                            await updateTask({
+                              id: row.original.id,
+                              status,
+                            })
+                            toast.success("Task updated")
+                          } catch (err) {
+                            toast.error(getErrorMessage(err))
+                          }
+                        }}
                       >
-                        {label}
+                        <Icon className="size-4" aria-hidden="true" />
+                        <span className="capitalize">{status.replace("_", " ")}</span>
                       </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onSelect={() => setRowAction({ row, type: "delete" })}
-              >
-                Delete
-                <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )
-      },
-      size: 40,
+                    )
+                  })}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Priority</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup value={row.original.priority}>
+                  {priorities.map((priority) => {
+                    const Icon = getPriorityIcon(priority)
+
+                    return (
+                      <DropdownMenuRadioItem
+                        key={priority}
+                        value={priority}
+                        className="flex items-center gap-2"
+                        onClick={async () => {
+                          try {
+                            await updateTask({
+                              id: row.original.id,
+                              priority,
+                            })
+                            toast.success("Task updated")
+                          } catch (err) {
+                            toast.error(getErrorMessage(err))
+                          }
+                        }}
+                      >
+                        <Icon className="size-4" aria-hidden="true" />
+                        <span className="capitalize">{priority}</span>
+                      </DropdownMenuRadioItem>
+                    )
+                  })}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => {
+                setRowAction({
+                  type: "delete",
+                  row,
+                })
+              }}
+            >
+              Delete
+              <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
     },
   ]
 }

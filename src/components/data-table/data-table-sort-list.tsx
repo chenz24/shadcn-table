@@ -303,7 +303,7 @@ export function DataTableSortList<TData>({
                           className="h-8 w-24 rounded"
                         >
                           <div className="truncate">
-                            <SelectValue />
+                            <SelectValue placeholder="排序方向" />
                           </div>
                         </SelectTrigger>
                         <SelectContent
